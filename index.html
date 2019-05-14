@@ -19,12 +19,13 @@
           }
         };
         recorder.onstop = exportVideo;
-        stop = e => {
+        stop = () => {
           recorder.stop();
+          exportVideo();
         };
         recorder.start();
       }
-      function exportVideo(e) {
+      function exportVideo() {
         var blob = new Blob(chunks);
         var vid = document.createElement('video');
         vid.id = 'recorded'
