@@ -39,7 +39,11 @@
         document.body.appendChild(vid);
         vid.play();
       }
-      btn.onclick = record;
+      btn.onclick = function() {
+        record();
+        playing = true;
+        frame = 0;
+      }
       function Animation(framey=[], wid=600, heigh=500) {
         this.frames = framey;
         this.wid = wid;
