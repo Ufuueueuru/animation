@@ -1,65 +1,287 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/p5.min.js"></script>
-<button>start recording</button><br>
-<script>
-  const btn = document.querySelector('button'),
-  chunks = [];
+<!DOCTYPE html>
 
-function record() {
-  chunks.length = 0;
-  let stream = document.querySelector('canvas').captureStream(30),
-    recorder = new MediaRecorder(stream);
-  recorder.ondataavailable = e => {
-    if (e.data.size) {
-      chunks.push(e.data);
-    }
-  };
-  recorder.onstop = exportVideo;
-  btn.onclick = e => {
-    recorder.stop();
-    btn.textContent = 'start recording';
-    btn.onclick = record;
-  };
-  recorder.start();
-  btn.textContent = 'stop recording';
-}
-
-function exportVideo(e) {
-  var blob = new Blob(chunks);
-  var vid = document.createElement('video');
-  vid.id = 'recorded'
-  vid.controls = true;
-  vid.src = URL.createObjectURL(blob);
-  document.body.appendChild(vid);
-  vid.play();
-}
-btn.onclick = record;
-
-// taken from pr.js docs
-var x, y;
-
-function setup() {
-  createCanvas(300, 200);
-  // Starts in the middle
-  x = width / 2;
-  y = height;
-}
-
-function draw() {
-  background(200);
-
-  // Draw a circle
-  stroke(50);
-  fill(100);
-  ellipse(x, y, 24, 24);
-
-  // Jiggling randomly on the horizontal axis
-  x = x + random(-1, 1);
-  // Moving up at a constant speed
-  y = y - 1;
-
-  // Reset to the bottom
-  if (y < 0) {
-    y = height;
-  }
-}
-</script>
+<html>
+  <head>
+    <title>Animations</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/p5.min.js"></script>
+  </head>
+  <body>
+    <script>
+      function stop(){}
+      var chunks = [];
+      function record() {
+        chunks.length = 0;
+        let stream = document.querySelector('canvas').captureStream(30),
+          recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => {
+          if (e.data.size) {
+            chunks.push(e.data);
+          }
+        };
+        recorder.onstop = exportVideo;
+        stop = e => {
+          recorder.stop();
+        };
+        recorder.start();
+      }
+      function exportVideo(e) {
+        var blob = new Blob(chunks);
+        var vid = document.createElement('video');
+        vid.id = 'recorded'
+        vid.controls = true;
+        vid.src = URL.createObjectURL(blob);
+        document.body.appendChild(vid);
+        vid.play();
+      }
+      function Animation(framey=[], wid=600, heigh=500) {
+        this.frames = framey;
+        this.wid = wid;
+        this.heigh = heigh;
+        this.draw = function(i) {
+          animation.get(i).fill(col.r, col.g, col.b);
+          animation.get(i).stroke(col.r, col.g, col.b);
+          animation.get(i).strokeWeight(drawweight/scal);
+          animation.get(i).line(px, py, x, y);
+        }
+        this.add = function(graphics) {
+          this.frames.push(graphics);
+          this.frames[this.frames.length-1].background(255, 255, 255, 0);
+        }
+        this.delete = function(i) {
+          this.frames.splice(i, 1);
+        }
+        this.insert = function(i) {
+          let garph = createGraphics(this.wid, this.heigh);
+          garph.background(255, 255, 255, 0);
+          this.frames.splice(i+1, 0, garph);
+        }
+        this.duplicate = function(i) {
+          let garph = createGraphics(this.wid, this.heigh);
+          garph.image(this.frames[i], 0, 0);
+          this.frames.splice(i, 0, garph);
+          frame ++;
+        }
+        this.new = function() {
+          this.frames.push(createGraphics(wid, heigh));
+          this.frames[this.frames.length-1].background(255, 255, 255, 0);
+        }
+        this.get = function(i) {
+          return this.frames[i];
+        }
+      }
+      function ColorPicker() {
+        this.b = 0;
+        this.ouseX = 0;
+        this.ouseY = 0;
+        this.targetX = 0;
+        this.targetY = 0;
+        this.set = function() {
+          return col = {r: this.targetX, g: this.targetY, b: constrain(round(this.b), 0, 255)};
+        }
+        this.draw = function(x, y, sca) {
+          this.ouseX = (mouseX-x)/sca;
+          this.ouseY = (mouseY-y)/sca;
+          push();
+          translate(x, y);
+          scale(sca);
+          for(var r = 0;r < 255; r+=24) {
+            for(var g = 0;g < 255; g+=24) {
+              fill(r, g, this.b);
+              noStroke();
+              rect(r, g, 26, 26);
+            }
+          }
+          fill(this.ouseX, this.ouseY, this.b);
+          rect(260, 260, 35, 35);
+          for(var i = 0;i < 255;i += 10) {
+            fill(0, 0, i);
+            rect(260, i, 35, 11);
+          }
+          fill(0);
+          rect(260, this.b, 35, 5);
+          if(this.ouseX > -10 && this.ouseX < 265 && this.ouseY > -10 && this.ouseY < 265) {
+            rect(constrain(this.ouseX,3,257)-3,constrain(this.ouseY,3,257)-3,6,6);
+          }
+          rect(constrain(this.targetX,3,257)-3,constrain(this.targetY,3,257)-3,6,6);
+          textSize(20);
+          text(constrain(round(this.targetX),0,255) +"," + constrain(round(this.targetY),0,255) + "," + constrain(round(this.b),0,255),10,280);
+          if(this.ouseX >= 260 && this.ouseY <= 260 && mouseIsPressed && this.ouseX <= 295 && this.ouseY >= -5) {
+            this.b = min(this.ouseY, 255);
+          }
+          if(mouseIsPressed && this.ouseX > -10 && this.ouseX < 265 && this.ouseY > -10 && this.ouseY < 265) {
+            this.targetX = constrain(round(this.ouseX),0,255);
+            this.targetY = constrain(round(this.ouseY),0,255);
+          }
+          pop();
+        }
+      }
+      var frame = 0;
+      var drawweight = 10;
+      var color;
+      var col;
+      var offset = 0;
+      var onion = false;
+      var playing = false;
+      var playSpeed = 10;
+      var controls = true;
+      //For moving around in the animation
+      var scal = 1;
+      var trans = {
+        x: 0,
+        y: 0
+      };
+      var animation;
+      var x, y, px, py;
+      var keys = [];
+      function setup() {
+        createCanvas(600, 500);
+        smooth();
+        animation = new Animation();
+        animation.new();
+        color = new ColorPicker();
+        col = {r: 0, b: 0, g: 0};
+      }
+      function draw() {
+        background(255);
+        if(!playing) {
+          if(keys[37]) {
+            trans.x += 3;
+          }
+          if(keys[39]) {
+            trans.x -= 3;
+          }
+          if(keys[38]) {
+            trans.y += 3;
+          }
+          if(keys[40]) {
+            trans.y -= 3;
+          }
+          push();
+          translate(width/2, height/2);
+          scale(scal);
+          px = (pmouseX)/scal-(trans.x)/scal-width/2+(animation.get(frame).width/2)/scal;
+          py = (pmouseY)/scal-(trans.y)/scal-height/2+(animation.get(frame).height/2)/scal;
+          x = (mouseX)/scal-(trans.x)/scal-width/2+(animation.get(frame).width/2)/scal;
+          y = (mouseY)/scal-(trans.y)/scal-height/2+(animation.get(frame).height/2)/scal;
+          //draw right here
+          if(mouseIsPressed && (!controls || (controls && mouseY < height*(3/4) && mouseX > width/6 && mouseX < width*(5/6) ))) {
+            animation.draw(frame);
+          }
+          stroke(180, 180, 180, 200);
+          strokeWeight(1);
+          fill(255);
+          rect(trans.x-animation.get(frame).width/2-1, trans.y-animation.get(frame).height/2, animation.get(frame).width+1, animation.get(frame).height);
+          image(animation.get(frame), trans.x-animation.get(frame).width/2, trans.y-animation.get(frame).height/2);
+          if(onion && frameCount % 2 === 0) {
+            image(animation.get(max(0, frame-1)), trans.x-animation.get(frame).width/2, trans.y-animation.get(frame).height/2);
+          }
+          pop();
+          fill(col.r, col.g, col.b, 100);
+          noStroke();
+          ellipse(mouseX, mouseY, drawweight, drawweight);
+          if(controls) {
+            stroke(180, 180, 180, 200);
+            strokeWeight(1);
+            fill(255);
+            rect(0, height*(3/4), width, height/4);
+            if(mouseIsPressed && mouseY > height*(3/4) && mouseX > width/4 && mouseX < width*(3/4)) {
+              offset += mouseX - pmouseX;
+            }
+            if(offset > 0) {
+              offset -= round(offset/5);
+            }
+            for(var i = animation.frames.length-1;i >= 0;i --) {
+              fill(150, 150, 150, 100);
+              rect(10 + offset + i*(height/8+10) + width/4-1, height*(13/16)-1, height/8+2, height/8+2);
+              if(frame === i) {
+                rect(10 + offset + i*(height/8+10) + width/4-4, height*(13/16)-4, height/8+7, height/8+7);
+              }
+              image(animation.get(i), 10+offset + i*(height/8+10) + width/4, height*(13/16), height/8, height/8);
+            }
+            fill(255);
+            rect(0, -1, width/6, height);
+            rect(width*(5/6), -1, width/6, height);
+            fill(0);
+            text("Frame: "+(frame+1) + "/" + animation.frames.length, width/32, height/2);
+            color.draw(width*(5/6), height*(3/8), (width/8)/210);
+            color.set();
+          }
+        }//!playing
+        if(playing) {
+          image(animation.get(floor(frame)), 0, 0);
+          if(frame < animation.frames.length-1) {
+            frame += playSpeed/frameRate();
+          } else {
+            frame = 0;
+            playing = false;
+            stop();
+          }
+        }
+      }
+      function mouseWheel(event) {
+        if(!Number.isNaN(event.delta) && event.delta !== 0) {
+          drawweight += event.delta/Math.abs(event.delta)*5;
+          drawweight = max(1, min(drawweight, 100));
+        }
+      }
+      /*function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }*/
+      function keyPressed() {
+        keys[keyCode] = true;
+      }
+      function keyReleased() {
+        if(keys[81]) {
+          animation.insert(frame);
+        }
+        if(keys[90]) {
+          animation.duplicate(frame);
+        }
+        if(keys[69]) {
+          if(animation.frames.length > 1) {
+            animation.delete(frame);
+            if(frame === animation.frames.length) {
+              frame --;
+            }
+          }
+        }
+        if(keys[32]) {
+          if(playing) {
+            frame = 0;
+            playing = false;
+            stop();
+          } else {
+            frame = 0;
+            playing = true;
+            record;
+          }
+        }
+        if(keys[67]) {
+          if(!controls) {
+            controls = true;
+          } else {
+            controls = false;
+          }
+        }
+        if(keys[65] && frame > 0) {
+          frame --;
+        } else if(keys[68]) {
+          if(animation.frames.length-1 > frame) {
+            frame ++;
+          } else {
+            animation.new();
+            frame ++;
+          }
+        }
+        if(keys[79]) {
+          if(onion) {
+            onion = false;
+          } else {
+            onion = true;
+          }
+        }
+        keys[keyCode] = false;
+      }
+    </script>
+  </body>
+</html>
