@@ -22,7 +22,6 @@
       };
       recorder.onstop = exportVideo;
       recorder.start();
-      btn.textContent = 'stop recording';
     }
 
     function exportVideo(e) {
@@ -261,6 +260,8 @@
           frame += playSpeed/frameRate();
         } else {
           frame = 0;
+          playing = false;
+          recorder.stop();
         }
       }
     }
