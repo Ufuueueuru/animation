@@ -29,6 +29,7 @@
         recorder.start();
         btn.textContent = 'stop recording';
       }
+
       function exportVideo(e) {
         var blob = new Blob(chunks);
         var vid = document.createElement('video');
@@ -38,6 +39,7 @@
         document.body.appendChild(vid);
         vid.play();
       }
+      btn.onclick = record;
       function Animation(framey=[], wid=600, heigh=500) {
         this.frames = framey;
         this.wid = wid;
