@@ -6,7 +6,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/p5.min.js"></script>
   </head>
   <body>
+    <button>start recording</button><br>
     <script>
+      const btn = document.querySelector('button');
       function stop(){}
       var chunks = [];
       function record() {
@@ -19,13 +21,15 @@
           }
         };
         recorder.onstop = exportVideo;
-        stop = () => {
+        btn.onclick = e => {
           recorder.stop();
-          exportVideo();
+          btn.textContent = 'start recording';
+          btn.onclick = record;
         };
         recorder.start();
+        btn.textContent = 'stop recording';
       }
-      function exportVideo() {
+      function exportVideo(e) {
         var blob = new Blob(chunks);
         var vid = document.createElement('video');
         vid.id = 'recorded'
